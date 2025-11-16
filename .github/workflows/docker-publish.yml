@@ -6,8 +6,8 @@ on:
       - main
 
 env:
-  DOCKER_IMAGE: abhijeet14d/expense-tracker
-  ANSIBLE_HOST: 13.49.59.142
+  DOCKER_IMAGE: adarsh5559/expense-tracker
+  ANSIBLE_HOST: 43.205.21.112
 
 jobs:
   build-and-push:
