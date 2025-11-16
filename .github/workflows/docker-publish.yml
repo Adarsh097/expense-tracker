@@ -1,0 +1,76 @@
+name: Build, Push and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  DOCKER_IMAGE: abhijeet14d/expense-tracker
+  ANSIBLE_HOST: 13.49.59.142
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ env.DOCKER_IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Docker Image Published
+        run: |
+          echo "### Docker Image Published!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** ${{ env.DOCKER_IMAGE }}:latest" >> $GITHUB_STEP_SUMMARY
+
+  deploy-via-ansible:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: 'placeholder'
+
+      - name: Add known hosts
+        run: ssh-keyscan -H ${{ env.ANSIBLE_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy via Ansible Control Node
+        run: |
+          echo "Connecting to Ansible Control Node..."
+          
+          ssh ubuntu@${{ env.ANSIBLE_HOST }} << 'ENDSSH'
+            echo "Running Ansible playbook..."
+            cd ~/ansible
+            ansible-playbook -i inventory.ini playbook.yml -e "docker_image=${{ env.DOCKER_IMAGE }}:latest"
+          ENDSSH
+
+      - name: Deployment Complete
+        run: |
+          echo "### Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Ansible Control:** ${{ env.ANSIBLE_HOST }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Application URL:** http://13.50.158.117" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "New Docker image deployed successfully!" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  expense-tracker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: expense-tracker:latest
+    container_name: expense-tracker-app
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    networks:
+      - expense-tracker-network
+
+networks:
+  expense-tracker-network:
+    driver: bridge
