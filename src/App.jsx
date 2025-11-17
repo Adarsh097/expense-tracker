@@ -107,7 +107,7 @@ function App() {
               <Wallet className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              Aivory Tracker
+             for tracking the expense
             </h1>
           </div>
           <p className="text-slate-600 text-lg font-medium">
